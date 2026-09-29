@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Tangkap Koin</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background: #101827;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.game {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* HEADER */
+.header {
+    width: 100%;
+    padding: 12px;
+    display: flex;
+    justify-content: space-around;
+    background: #172235;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.header span {
+    color: #ffd43b;
+}
+
+/* AREA GAME */
+#gameArea {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 55vh;
+    min-height: 350px;
+    background:
+        linear-gradient(#172b3f 1px, transparent 1px),
+        linear-gradient(90deg, #172b3f 1px, transparent 1px);
+    background-size: 35px 35px;
+    border: 2px solid #2c3e50;
+    overflow: hidden;
+}
+
+/* PEMAIN */
+#player {
+    position: absolute;
+    width: 45px;
+    height: 45px;
+    background: #38e1a6;
+    border-radius: 12px;
+    left: 50%;
+    top: 70%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px #38e1a6;
+}
+
+/* MATA PEMAIN */
+#player::before,
+#player::after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background: #111;
+    border-radius: 50%;
+    top: 11px;
+}
+
+#player::before {
+    left: 10px;
+}
+
+#player::after {
+    right: 10px;
+}
+
+/* KOIN */
+.coin {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    background: #ffd43b;
+    border: 3px solid #f59f00;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #ffd43b;
+}
+
+/* KONTROL */
+.controls {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: 65px 65px 65px;
+    grid-template-rows: 60px 60px 60px;
+    gap: 7px;
+}
+
+.btn {
+    border: none;
+    border-radius: 15px;
+    background: #26364d;
+    color: white;
+    font-size: 25px;
+    font-weight: bold;
+    box-shadow: 0 5px 0 #111a27;
+    touch-action: manipulation;
+}
+
+.btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #111a27;
+    background: #38e1a6;
+    color: #07130f;
+}
+
+.up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.down {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+/* PESAN */
+#message {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: rgba(0,0,0,0.75);
+    z-index: 10;
+    text-align: center;
+    padding: 20px;
+}
+
+#message h1 {
+    color: #38e1a6;
+    margin-bottom: 10px;
+}
+
+#message button {
+    margin-top: 15px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    background: #38e1a6;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* DESKTOP */
+@media (min-width: 700px) {
+    #gameArea {
+        height: 500px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <div class="header">
+        <div>🪙 Skor: <span id="score">0</span></div>
+        <div>❤️ Nyawa: <span id="life">3</span></div>
+        <div>⭐ Level: <span id="level">1</span></div>
+    </div>
+
+    <div id="gameArea">
+
+        <div id="player"></div>
+
+        <div id="message">
+            <h1>🪙 TANGKAP KOIN</h1>
+            <p>Gunakan tombol untuk bergerak!</p>
+            <p>Tangkap koin sebanyak mungkin.</p>
+
+            <button onclick="startGame()">MULAI GAME</button>
+        </div>
+
+    </div>
+
+    <!-- KONTROL HP -->
+    <div class="controls">
+
+        <button class="btn up"
+            ontouchstart="move('up')"
+            onclick="move('up')">
+            ⬆️
+        </button>
+
+        <button class="btn left"
+            ontouchstart="move('left')"
+            onclick="move('left')">
+            ⬅️
+        </button>
+
+        <button class="btn down"
+            ontouchstart="move('down')"
+            onclick="move('down')">
+            ⬇️
+        </button>
+
+        <button class="btn right"
+            ontouchstart="move('right')"
+            onclick="move('right')">
+            ➡️
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const gameArea = document.getElementById("gameArea");
+const player = document.getElementById("player");
+
+const scoreText = document.getElementById("score");
+const lifeText = document.getElementById("life");
+const levelText = document.getElementById("level");
+const message = document.getElementById("message");
+
+let playerX = 50;
+let playerY = 70;
+
+let score = 0;
+let life = 3;
+let level = 1;
+
+let coin = null;
+let gameRunning = false;
+
+const speed = 5;
+
+
+/* MULAI GAME */
+function startGame() {
+
+    score = 0;
+    life = 3;
+    level = 1;
+
+    playerX = 50;
+    playerY = 70;
+
+    gameRunning = true;
+
+    message.style.display = "none";
+
+    updatePlayer();
+    updateInfo();
+    createCoin();
+}
+
+
+/* GERAK PEMAIN */
+function move(direction) {
+
+    if (!gameRunning) return;
+
+    if (direction === "up") {
+        playerY -= speed;
+    }
+
+    if (direction === "down") {
+        playerY += speed;
+    }
+
+    if (direction === "left") {
+        playerX -= speed;
+    }
+
+    if (direction === "right") {
+        playerX += speed;
+    }
+
+    /* BATAS AREA */
+
+    if (playerX < 5) playerX = 5;
+    if (playerX > 95) playerX = 95;
+
+    if (playerY < 7) playerY = 7;
+    if (playerY > 93) playerY = 93;
+
+    updatePlayer();
+
+    checkCoin();
+}
+
+
+/* UPDATE POSISI */
+function updatePlayer() {
+
+    player.style.left = playerX + "%";
+    player.style.top = playerY + "%";
+
+}
+
+
+/* BUAT KOIN */
+function createCoin() {
+
+    if (coin) {
+        coin.remove();
+    }
+
+    coin = document.createElement("div");
+
+    coin.className = "coin";
+
+    const x = Math.random() * 85 + 5;
+    const y = Math.random() * 80 + 5;
+
+    coin.style.left = x + "%";
+    coin.style.top = y + "%";
+
+    gameArea.appendChild(coin);
+}
+
+
+/* CEK TABRAKAN */
+function checkCoin() {
+
+    if (!coin) return;
+
+    const playerRect = player.getBoundingClientRect();
+    const coinRect = coin.getBoundingClientRect();
+
+    const collision =
+        playerRect.left < coinRect.right &&
+        playerRect.right > coinRect.left &&
+        playerRect.top < coinRect.bottom &&
+        playerRect.bottom > coinRect.top;
+
+    if (collision) {
+
+        score++;
+
+        /* LEVEL NAIK */
+        if (score % 5 === 0) {
+            level++;
+        }
+
+        updateInfo();
+
+        createCoin();
+    }
+}
+
+
+/* UPDATE INFORMASI */
+function updateInfo() {
+
+    scoreText.textContent = score;
+    lifeText.textContent = life;
+    levelText.textContent = level;
+
+}
+
+
+/* KEYBOARD UNTUK LAPTOP */
+document.addEventListener("keydown", function(event) {
+
+    if (event.key === "ArrowUp") {
+        move("up");
+    }
+
+    if (event.key === "ArrowDown") {
+        move("down");
+    }
+
+    if (event.key === "ArrowLeft") {
+        move("left");
+    }
+
+    if (event.key === "ArrowRight") {
+        move("right");
+    }
+
+});
+
+
+</script>
+
+</body>
+</html>
